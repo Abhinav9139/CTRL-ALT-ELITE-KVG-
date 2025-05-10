@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Recommended Destinations</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: #f4fbfc;
+      color: #2c3e50;
+      padding: 1.5rem;
+      max-width: 720px;
+      margin: auto;
+    }
+    h1 {
+      text-align: center;
+      color: #134e5e;
+    }
+    .destination {
+      background: #fff;
+      border-radius: 16px;
+      padding: 1rem 1.5rem;
+      margin: 1.5rem 0;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    .destination h3 {
+      margin-top: 0;
+      font-size: 1.5rem;
+      color: #2980b9;
+    }
+    .destination a {
+      text-decoration: none;
+      color: inherit;
+    }
+    .tags {
+      font-size: 0.9rem;
+      margin: 0.5rem 0;
+      color: #555;
+    }
+    .description {
+      font-size: 1rem;
+      line-height: 1.6;
+    }
+    .back-link {
+      display: inline-block;
+      margin-top: 2rem;
+      text-align: center;
+      font-weight: bold;
+      color: #3498db;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>Recommended Destinations</h1>
+  <div id="results">Loading...</div>
+  <a class="back-link" href="/">← Back to Planner</a>
+
+  <script>
+    function slugify(text) {
+      return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    }
+
+    async function loadResults() {
+      const params = new URLSearchParams(window.location.search);
+      const experience = params.get('experience');
+      const budget = parseInt(params.get('budget'));
+      const climate = params.get('climate');
+      const duration = params.get('duration');
+
+      const response = await fetch('/api/destinations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ experience, budget, climate })
+      });
+
+      const data = await response.json();
+      const resultsDiv = document.getElementById('results');
+      resultsDiv.innerHTML = '';
+
+      if (!data.results || !data.results.length) {
+        resultsDiv.innerHTML = '<p>No matching destinations found. Try adjusting your filters.</p>';
+        return;
+      }
+
+      data.results.forEach(dest => {
+        const div = document.createElement('div');
+        div.className = 'destination';
+        div.innerHTML = `
+          <h3><a href="/destination/${slugify(dest.name)}" target="_blank">${dest.name}</a></h3>
+          <div class="tags">${dest.tags.join(' • ')}</div>
+          <p class="description">${dest.description} <br><strong>Suggested Duration:</strong> ${duration} days</p>
+        `;
+        resultsDiv.appendChild(div);
+      });
+    }
+
+    loadResults();
+  </script>
+</body>
+</html>
